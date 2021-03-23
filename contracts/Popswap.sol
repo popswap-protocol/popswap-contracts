@@ -59,10 +59,8 @@ contract Popswap is ReentrancyGuard {
     function openNewTrade(
         address _openingTokenAddress,
         uint256 _openingTokenId,
-        // uint8 _openingTokenType,
         address _closingTokenAddress,
         uint256 _closingTokenId,
-        // uint8 _closingTokenType,
         uint256 _expiryDate
     ) public nonReentrant returns (uint256) {
         require(
