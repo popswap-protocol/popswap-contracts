@@ -31,10 +31,8 @@ contract Popswap is ReentrancyGuard {
         uint256 tradeId;
         address openingTokenAddress;
         uint256 openingTokenId;
-        // uint8 openingTokenType; // 0 for ERC771, 1 for ERC1155
         address closingTokenAddress;
         uint256 closingTokenId;
-        // uint8 closingTokenType; // 0 for ERC771, 1 for ERC1155
         uint256 expiryDate;
         uint256 successDate;
         address tradeOpener;
@@ -71,36 +69,13 @@ contract Popswap is ReentrancyGuard {
             _expiryDate > block.timestamp,
             "Popswap::openNewTrade: _expiryDate must be after current block.timestamp"
         );
-        // require(
-        //     _openingTokenType == 0 || _openingTokenType == 1,
-        //     "Popswap::openNewTrade: _openingTokenType must be either 0 or 1"
-        // );
-        // require(
-        //     _closingTokenType == 0 || _closingTokenType == 1,
-        //     "Popswap::openNewTrade: _closingTokenType must be either 0 or 1"
-        // );
-        // if(_openingTokenType == 0) {
-        //     ERC721 openingToken = ERC721(_openingTokenAddress);
-        //     require(
-        //         openingToken.ownerOf(_openingTokenId) == msg.sender,
-        //         "Popswap::openNewTrade: ERC721 openingToken must be owned by tradeOpener"
-        //     );
-        // }else if(_openingTokenType == 1) {
-        //     ERC1155 openingToken = ERC1155(_openingTokenAddress);
-        //     require(
-        //         openingToken.balanceOf(msg.sender, _openingTokenId) > 0,
-        //         "Popswap::openNewTrade: ERC1155 openingToken must be owned by tradeOpener"
-        //     );
-        // }
         uint256 tradeId = trades.length;
         trades.push(Trade(
             tradeId, // uint256 tradeId;
             _openingTokenAddress, // address openingTokenAddress;
             _openingTokenId, // uint256 openingTokenId;
-            // _openingTokenType, // uint8 openingTokenType; // 0 for ERC771, 1 for ERC1155
             _closingTokenAddress, // address closingTokenAddress;
             _closingTokenId,  // uint256 closingTokenId;
-            // _closingTokenType, // uint8 closingTokenType; // 0 for ERC771, 1 for ERC1155
             _expiryDate, // uint256 expiryDate;
             0, // uint256 successDate;
             msg.sender, // address tradeOpener;
@@ -117,10 +92,8 @@ contract Popswap is ReentrancyGuard {
         uint256,
         address,
         uint256,
-        // uint8,
         address,
         uint256,
-        // uint8,
         uint256,
         uint256,
         address,
@@ -132,10 +105,8 @@ contract Popswap is ReentrancyGuard {
             trade.tradeId,
             trade.openingTokenAddress,
             trade.openingTokenId,
-            // trade.openingTokenType,
             trade.closingTokenAddress,
             trade.closingTokenId,
-            // trade.closingTokenType,
             trade.expiryDate,
             trade.successDate,
             trade.tradeOpener,
@@ -168,10 +139,8 @@ contract Popswap is ReentrancyGuard {
             trade.tradeId,
             trade.openingTokenAddress,
             trade.openingTokenId,
-            // trade.openingTokenType,
             trade.closingTokenAddress,
             trade.closingTokenId,
-            // trade.closingTokenType,
             trade.expiryDate,
             trade.successDate,
             trade.tradeOpener,
@@ -255,10 +224,8 @@ contract Popswap is ReentrancyGuard {
             trade.tradeId,
             trade.openingTokenAddress,
             trade.openingTokenId,
-            // trade.openingTokenType,
             trade.closingTokenAddress,
             trade.closingTokenId,
-            // trade.closingTokenType,
             trade.expiryDate,
             block.timestamp,
             trade.tradeOpener,
