@@ -19,10 +19,8 @@ describe("Popswap", function() {
     await popswap.openNewTrade(
       nifty.address,
       420,
-      0,
       soda.address,
       777,
-      0,
       Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
     );
 
@@ -30,7 +28,7 @@ describe("Popswap", function() {
 
     const tradeItem = await popswap.getTradeByTradeId("0");
 
-    expect(tradeItem[11]).to.equal(false);
+    expect(tradeItem[9]).to.equal(false);
   });
   it("Should not allow a trade to be opened with an expiry before the current blocktime", async function() {
     const [owner, addr1] = await ethers.getSigners();
@@ -50,10 +48,8 @@ describe("Popswap", function() {
     await expect(popswap.openNewTrade(
       nifty.address,
       420,
-      0,
       soda.address,
       777,
-      0,
       Math.floor(new Date().getTime() / 1000)
     )).to.be.revertedWith("Popswap::openNewTrade: _expiryDate must be after current block.timestamp");
 
@@ -76,10 +72,8 @@ describe("Popswap", function() {
     await popswap.openNewTrade(
       nifty.address,
       420,
-      0,
       soda.address,
       777,
-      0,
       Math.floor((new Date().getTime() + 15000) / 1000)
     );
 
@@ -87,119 +81,7 @@ describe("Popswap", function() {
       await expect(popswap.cancelTrade("0")).to.be.revertedWith("Popswap::openNewTrade: _expiryDate must be after current block.timestamp");
     }, 15000)
   });
-  it("Should not allow a trade to be opened with an openingTokenType other than 0 or 1", async function() {
-    const [owner, addr1] = await ethers.getSigners();
-
-    const ERC721 = await hre.ethers.getContractFactory("ERC721");
-
-    const nifty = await ERC721.deploy("NIFTY", "NFT", owner.address, 420);
-    await nifty.deployed();
-
-    const soda = await ERC721.deploy("SODAPOP", "SODA", addr1.address, 777);
-    await soda.deployed();
-
-    const Popswap = await hre.ethers.getContractFactory("Popswap");
-    const popswap = await Popswap.deploy("0xe8256119a8621a6ba3c42e807b261840bde77944");
-    await popswap.deployed();
-
-    await expect(popswap.openNewTrade(
-      nifty.address,
-      420,
-      2,
-      soda.address,
-      777,
-      0,
-      Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
-    )).to.be.revertedWith("Popswap::openNewTrade: _openingTokenType must be either 0 or 1");
-    
-  });
-  it("Should not allow a trade to be opened with a closingTokenType other than 0 or 1", async function() {
-    const [owner, addr1] = await ethers.getSigners();
-
-    const ERC721 = await hre.ethers.getContractFactory("ERC721");
-
-    const nifty = await ERC721.deploy("NIFTY", "NFT", owner.address, 420);
-    await nifty.deployed();
-
-    const soda = await ERC721.deploy("SODAPOP", "SODA", addr1.address, 777);
-    await soda.deployed();
-
-    const Popswap = await hre.ethers.getContractFactory("Popswap");
-    const popswap = await Popswap.deploy("0xe8256119a8621a6ba3c42e807b261840bde77944");
-    await popswap.deployed();
-
-    await expect(popswap.openNewTrade(
-      nifty.address,
-      420,
-      0,
-      soda.address,
-      777,
-      2,
-      Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
-    )).to.be.revertedWith("Popswap::openNewTrade: _closingTokenType must be either 0 or 1");
-    
-  });
-  it("Should not allow opening a trade for an unowned ERC721 token", async function() {
-    const [owner, addr1] = await ethers.getSigners();
-
-    const ERC721 = await hre.ethers.getContractFactory("ERC721");
-
-    const nifty = await ERC721.deploy("NIFTY", "NFT", owner.address, 420);
-    await nifty.deployed();
-
-    const soda = await ERC721.deploy("SODAPOP", "SODA", addr1.address, 777);
-    await soda.deployed();
-
-    const balanceOfOrderOpenerClosingTokenBeforeTrade = await soda.balanceOf(owner.address);
-
-    await expect(balanceOfOrderOpenerClosingTokenBeforeTrade.toString()).to.equal('0');
-
-    const Popswap = await hre.ethers.getContractFactory("Popswap");
-    const popswap = await Popswap.deploy("0xe8256119a8621a6ba3c42e807b261840bde77944");
-    await popswap.deployed();
-
-    await expect(popswap.openNewTrade(
-      soda.address,
-      777,
-      0,
-      nifty.address,
-      420,
-      0,
-      Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
-    )).to.be.revertedWith("Popswap::openNewTrade: ERC721 openingToken must be owned by tradeOpener");
-    
-  });
-  it("Should not allow opening a trade for an unowned ERC1155 token", async function() {
-    const [owner, addr1] = await ethers.getSigners();
-
-    const ERC1155 = await hre.ethers.getContractFactory("ERC1155");
-
-    const seen = await ERC1155.deploy("seen1155", owner.address, 10);
-    await seen.deployed();
-
-    const nftx = await ERC1155.deploy("nftx1155", addr1.address, 13);
-    await nftx.deployed();
-
-    const balanceOfOrderOpenerClosingTokenBeforeTrade = await nftx.balanceOf(owner.address, 13);
-
-    await expect(balanceOfOrderOpenerClosingTokenBeforeTrade).to.equal("0");
-
-    const Popswap = await hre.ethers.getContractFactory("Popswap");
-    const popswap = await Popswap.deploy("0xe8256119a8621a6ba3c42e807b261840bde77944");
-    await popswap.deployed();
-
-    await expect(popswap.openNewTrade(
-      nftx.address,
-      13,
-      1,
-      seen.address,
-      10,
-      1,
-      Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
-    )).to.be.revertedWith("Popswap::openNewTrade: ERC1155 openingToken must be owned by tradeOpener");
-    
-  });
-  it("Should allow opening a trade for an owned ERC721 token", async function() {
+  it("Should allow opening a trade for an ERC721 token", async function() {
     const [owner, addr1] = await ethers.getSigners();
 
     const ERC721 = await hre.ethers.getContractFactory("ERC721");
@@ -224,10 +106,8 @@ describe("Popswap", function() {
       await popswap.openNewTrade(
         nifty.address,
         420,
-        0,
         soda.address,
         777,
-        0,
         Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
       )
     }catch(e) {
@@ -238,10 +118,10 @@ describe("Popswap", function() {
 
     const tradeItem = await popswap.getTradeByTradeId("0");
 
-    await expect(tradeItem).to.have.lengthOf(12) // Length of Trade struct
+    await expect(tradeItem).to.have.lengthOf(10) // Length of Trade struct
     
   });
-  it("Should allow opening a trade for an owned ERC1155 token", async function() {
+  it("Should allow opening a trade for an ERC1155 token", async function() {
     const [owner, addr1] = await ethers.getSigners();
 
     const ERC1155 = await hre.ethers.getContractFactory("ERC1155");
@@ -266,10 +146,8 @@ describe("Popswap", function() {
       await popswap.openNewTrade(
         seen.address,
         10,
-        1,
         nftx.address,
         13,
-        1,
         Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
       )
     }catch(e) {
@@ -280,7 +158,7 @@ describe("Popswap", function() {
 
     const tradeItem = await popswap.getTradeByTradeId("0");
 
-    await expect(tradeItem).to.have.lengthOf(12) // Length of Trade struct
+    await expect(tradeItem).to.have.lengthOf(10) // Length of Trade struct
     
   });
   it("Should allow closing a ERC712 <-> ERC721 trade for the requested, approved & owned ERC721 token", async function() {
@@ -314,10 +192,8 @@ describe("Popswap", function() {
       await popswap.openNewTrade(
         nifty.address,
         420,
-        0,
         soda.address,
         777,
-        0,
         Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
       )
     }catch(e) {
@@ -349,7 +225,7 @@ describe("Popswap", function() {
     let tradeExecutionError = false;
 
     try {
-      await popswap.connect(addr1).executeTrade("0");
+      await popswap.connect(addr1).executeTrade("0", "0", "0");
     }catch(e){
       console.log({e})
       tradeExecutionError = true;
@@ -399,10 +275,8 @@ describe("Popswap", function() {
       await popswap.openNewTrade(
         seen.address,
         10,
-        1,
         nftx.address,
         13,
-        1,
         Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
       )
     }catch(e) {
@@ -434,7 +308,7 @@ describe("Popswap", function() {
     let tradeExecutionError = false;
 
     try {
-      await popswap.connect(addr1).executeTrade("0");
+      await popswap.connect(addr1).executeTrade("0", "1", "1");
     }catch(e){
       console.log({e})
       tradeExecutionError = true;
@@ -485,10 +359,8 @@ describe("Popswap", function() {
       await popswap.openNewTrade(
         nifty.address,
         420,
-        0,
         nftx.address,
         13,
-        1,
         Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
       )
     }catch(e) {
@@ -520,7 +392,7 @@ describe("Popswap", function() {
     let tradeExecutionError = false;
 
     try {
-      await popswap.connect(addr1).executeTrade("0");
+      await popswap.connect(addr1).executeTrade("0", "0", "1");
     }catch(e){
       console.log({e})
       tradeExecutionError = true;
@@ -571,10 +443,8 @@ describe("Popswap", function() {
       await popswap.openNewTrade(
         seen.address,
         10,
-        1,
         soda.address,
         777,
-        0,
         Math.floor((new Date().getTime() + (1000 * 60 * 60)) / 1000)
       )
     }catch(e) {
@@ -606,7 +476,7 @@ describe("Popswap", function() {
     let tradeExecutionError = false;
 
     try {
-      await popswap.connect(addr1).executeTrade("0");
+      await popswap.connect(addr1).executeTrade("0", "1", "0");
     }catch(e){
       console.log({e})
       tradeExecutionError = true;
