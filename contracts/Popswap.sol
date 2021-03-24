@@ -42,8 +42,6 @@ contract Popswap is ReentrancyGuard {
 
     Trade[] public trades;
 
-    mapping (address => uint256[]) private _tradeOpenerToTradeIds;
-    mapping (uint256 => address) private _tradeIdToTradeOpener;
     mapping (uint256 => address) private _tradeIdToTradeCloser;
   
     address private _devFund;
@@ -80,8 +78,6 @@ contract Popswap is ReentrancyGuard {
             0x0000000000000000000000000000000000000000, // address tradeCloser;
             true // bool active;
         ));
-        _tradeOpenerToTradeIds[msg.sender].push(tradeId);
-        _tradeIdToTradeOpener[tradeId] = msg.sender;
         emit TradeOpened(tradeId, msg.sender);
         return tradeId;
     }
@@ -120,11 +116,11 @@ contract Popswap is ReentrancyGuard {
     function cancelTrade(
         uint256 _tradeId
     ) public {
+        Trade memory trade = trades[_tradeId];
         require(
-            _tradeIdToTradeOpener[_tradeId] == msg.sender,
+            trade.tradeOpener == msg.sender,
             "Popswap::cancelTrade: _tradeId must be trade created by msg.sender"
         );
-        Trade memory trade = trades[_tradeId];
         require(
             trade.tradeCloser == 0x0000000000000000000000000000000000000000,
             "Popswap::cancelTrade: _tradeCloser can't already be non-zero address"
@@ -132,6 +128,10 @@ contract Popswap is ReentrancyGuard {
         require(
             trade.successDate == 0,
             "Popswap::cancelTrade: successDate can't already be populated"
+        );
+        require(
+            trade.expiryDate > block.timestamp,
+            "Popswap::cancelTrade: trade.expiryDate must be after current block.timestamp"
         );
         trades[_tradeId] = Trade(
             trade.tradeId,
@@ -149,7 +149,15 @@ contract Popswap is ReentrancyGuard {
         emit TradeCancelled(trade.tradeId, msg.sender);
     }
 
-    function isExchangeExecutable(uint256 _tradeId, uint8 _openingTokenType, uint8 _closingTokenType) public view returns (bool) {
+    function isTradeExecutable(uint256 _tradeId, uint8 _openingTokenType, uint8 _closingTokenType) public view returns (bool) {
+        require(
+            _openingTokenType <= 1,
+            "Popswap::isTradeExecutable: _openingTokenType must be either 0 or 1"
+        );
+        require(
+            _closingTokenType <= 1,
+            "Popswap::isTradeExecutable: _closingTokenType must be either 0 or 1"
+        );
         Trade memory trade = trades[_tradeId];
         if(trade.expiryDate < block.timestamp) {
             return false;
@@ -195,6 +203,14 @@ contract Popswap is ReentrancyGuard {
     }
 
     function executeTrade(uint256 _tradeId, uint8 _openingTokenType, uint8 _closingTokenType) public nonReentrant returns (uint256) {
+        require(
+            _openingTokenType <= 1,
+            "Popswap::executeTrade: _openingTokenType must be either 0 or 1"
+        );
+        require(
+            _closingTokenType <= 1,
+            "Popswap::executeTrade: _closingTokenType must be either 0 or 1"
+        );
         Trade memory trade = trades[_tradeId];
         require(
             trade.active == true,
