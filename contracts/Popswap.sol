@@ -3,8 +3,18 @@ pragma solidity >=0.7.0 <0.8.0;
 
 import "./SafeMath.sol";
 import "./ReentrancyGuard.sol";
-import "./simulators/ERC721/ERC721.sol";
-import "./simulators/ERC1155/ERC1155.sol";
+
+interface IERC721 {
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
+    function ownerOf(uint256 tokenId) external view returns (address owner);
+    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+}
+
+interface IERC1155 {
+    function isApprovedForAll(address account, address operator) external view returns (bool);
+    function balanceOf(address account, uint256 id) external view returns (uint256);
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
+}
 
 contract Popswap is ReentrancyGuard {
     using SafeMath for uint256;
@@ -65,16 +75,16 @@ contract Popswap is ReentrancyGuard {
         );
         uint256 tradeId = trades.length;
         trades.push(Trade(
-            tradeId, // uint256 tradeId;
-            _openingTokenAddress, // address openingTokenAddress;
-            _openingTokenId, // uint256 openingTokenId;
-            _closingTokenAddress, // address closingTokenAddress;
-            _closingTokenId,  // uint256 closingTokenId;
-            _expiryDate, // uint256 expiryDate;
-            0, // uint256 successDate;
-            msg.sender, // address tradeOpener;
-            0x0000000000000000000000000000000000000000, // address tradeCloser;
-            true // bool active;
+            tradeId,
+            _openingTokenAddress,
+            _openingTokenId,
+            _closingTokenAddress,
+            _closingTokenId,
+            _expiryDate,
+            0,
+            msg.sender,
+            0x0000000000000000000000000000000000000000,
+            true
         ));
         emit TradeOpened(tradeId, msg.sender);
         return tradeId;
@@ -124,10 +134,6 @@ contract Popswap is ReentrancyGuard {
             "Popswap::cancelTrade: _tradeCloser can't already be non-zero address"
         );
         require(
-            trade.successDate == 0,
-            "Popswap::cancelTrade: successDate can't already be populated"
-        );
-        require(
             trade.expiryDate > block.timestamp,
             "Popswap::cancelTrade: trade.expiryDate must be after current block.timestamp"
         );
@@ -164,7 +170,7 @@ contract Popswap is ReentrancyGuard {
             return false;
         }
         if(_openingTokenType == 0) {
-            ERC721 openingToken = ERC721(trade.openingTokenAddress);
+            IERC721 openingToken = IERC721(trade.openingTokenAddress);
             if(openingToken.isApprovedForAll(trade.tradeOpener, address(this)) != true) {
                 return false;
             }
@@ -172,7 +178,7 @@ contract Popswap is ReentrancyGuard {
                 return false;
             }
         }else if(_openingTokenType == 1) {
-            ERC1155 openingToken = ERC1155(trade.openingTokenAddress);
+            IERC1155 openingToken = IERC1155(trade.openingTokenAddress);
             if(openingToken.isApprovedForAll(trade.tradeOpener, address(this)) != true) {
                 return false;
             }
@@ -181,15 +187,15 @@ contract Popswap is ReentrancyGuard {
             }
         }
         if(_closingTokenType == 0) {
-            ERC721 closingToken = ERC721(trade.closingTokenAddress);
+            IERC721 closingToken = IERC721(trade.closingTokenAddress);
             if(closingToken.isApprovedForAll(msg.sender, address(this)) != true) {
                 return false;
             }
-            if(closingToken.balanceOf(msg.sender) < 1) {
+            if(closingToken.ownerOf(trade.closingTokenId) != msg.sender) {
                 return false;
             }
         }else if(_closingTokenType == 1) {
-            ERC1155 closingToken = ERC1155(trade.closingTokenAddress);
+            IERC1155 closingToken = IERC1155(trade.closingTokenAddress);
             if(closingToken.isApprovedForAll(msg.sender, address(this)) != true) {
                 return false;
             }
@@ -219,17 +225,17 @@ contract Popswap is ReentrancyGuard {
             "Popswap::executeTrade: trade has expired"
         );
         if(_openingTokenType == 0) {
-            ERC721 openingToken = ERC721(trade.openingTokenAddress);
-            openingToken.transferFrom(trade.tradeOpener, msg.sender, trade.openingTokenId);
+            IERC721 openingToken = IERC721(trade.openingTokenAddress);
+            openingToken.safeTransferFrom(trade.tradeOpener, msg.sender, trade.openingTokenId);
         }else if(_openingTokenType == 1) {
-            ERC1155 openingToken = ERC1155(trade.openingTokenAddress);
+            IERC1155 openingToken = IERC1155(trade.openingTokenAddress);
             openingToken.safeTransferFrom(trade.tradeOpener, msg.sender, trade.openingTokenId, 1, "0000000000000000000000000000000000000000000000000000000000000000");
         }
         if(_closingTokenType == 0) {
-            ERC721 closingToken = ERC721(trade.closingTokenAddress);
-            closingToken.transferFrom(msg.sender, trade.tradeOpener, trade.closingTokenId);
+            IERC721 closingToken = IERC721(trade.closingTokenAddress);
+            closingToken.safeTransferFrom(msg.sender, trade.tradeOpener, trade.closingTokenId);
         }else if(_closingTokenType == 1) {
-            ERC1155 closingToken = ERC1155(trade.closingTokenAddress);
+            IERC1155 closingToken = IERC1155(trade.closingTokenAddress);
             closingToken.safeTransferFrom(msg.sender, trade.tradeOpener, trade.closingTokenId, 1, "0000000000000000000000000000000000000000000000000000000000000000");
         }
         trades[_tradeId] = Trade(
