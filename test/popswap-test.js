@@ -4,7 +4,7 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 describe("Popswap", function() {
   // First test takes ~ 20 seconds
-  it("Should change isExchangeExecutable result once trade expires & shouldn't allow cancelling an expired trade", async function() {
+  it("Should change isTradeExecutable result once trade expires & shouldn't allow cancelling an expired trade", async function() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
     const ERC721 = await hre.ethers.getContractFactory("ERC721");
@@ -55,14 +55,14 @@ describe("Popswap", function() {
 
     await expect(approvalClosingTokenError).to.be.false;
 
-    let isTradeExecutablePreExpiry = await popswap.connect(addr1).isExchangeExecutable("0", "0", "0");
+    let isTradeExecutablePreExpiry = await popswap.connect(addr1).isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutablePreExpiry).to.be.true;
 
     await wait(20000);
 
     await expect(popswap.cancelTrade("0")).to.be.revertedWith("Popswap::cancelTrade: trade.expiryDate must be after current block.timestamp");
 
-    let isTradeExecutablePostExpiry = await popswap.connect(addr1).isExchangeExecutable("0", "0", "0");
+    let isTradeExecutablePostExpiry = await popswap.connect(addr1).isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutablePostExpiry).to.be.false;
   }).timeout(30000);
   it("Should retrieve a dev fund which is the same as the provided address in constructor", async function() {
@@ -129,7 +129,7 @@ describe("Popswap", function() {
     )).to.be.revertedWith("Popswap::openNewTrade: _expiryDate must be after current block.timestamp");
 
   });
-  it("Should change isExchangeExecutable result if openingToken owner transfers their openingToken after opening trade & approving Popswap (ERC721)", async function() {
+  it("Should change isTradeExecutable result if openingToken owner transfers their openingToken after opening trade & approving Popswap (ERC721)", async function() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
     const ERC721 = await hre.ethers.getContractFactory("ERC721");
@@ -180,16 +180,16 @@ describe("Popswap", function() {
 
     await expect(approvalClosingTokenError).to.be.false;
 
-    let isTradeExecutablePreTransfer = await popswap.connect(addr1).isExchangeExecutable("0", "0", "0");
+    let isTradeExecutablePreTransfer = await popswap.connect(addr1).isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutablePreTransfer).to.be.true;
 
     await nifty.transferFrom(owner.address, addr2.address, 420)
 
-    let isTradeExecutablePostTransfer = await popswap.connect(addr1).isExchangeExecutable("0", "0", "0");
+    let isTradeExecutablePostTransfer = await popswap.connect(addr1).isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutablePostTransfer).to.be.false;
 
   });
-  it("Should change isExchangeExecutable result if openingToken owner transfers their openingToken after opening trade & approving Popswap (ERC1155)", async function() {
+  it("Should change isTradeExecutable result if openingToken owner transfers their openingToken after opening trade & approving Popswap (ERC1155)", async function() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
     const ERC1155 = await hre.ethers.getContractFactory("ERC1155");
@@ -240,16 +240,16 @@ describe("Popswap", function() {
 
     await expect(approvalClosingTokenError).to.be.false;
 
-    let isTradeExecutablePreTransfer = await popswap.connect(addr1).isExchangeExecutable("0", "1", "1");
+    let isTradeExecutablePreTransfer = await popswap.connect(addr1).isTradeExecutable("0", "1", "1");
     await expect(isTradeExecutablePreTransfer).to.be.true;
 
     await seen.safeTransferFrom(owner.address, addr2.address, 10, 1, 0x0000000000000000000000000000000000000000000000000000000000000000)
 
-    let isTradeExecutablePostTransfer = await popswap.connect(addr1).isExchangeExecutable("0", "1", "1");
+    let isTradeExecutablePostTransfer = await popswap.connect(addr1).isTradeExecutable("0", "1", "1");
     await expect(isTradeExecutablePostTransfer).to.be.false;
 
   });
-  it("Should change isExchangeExecutable result if closingToken owner transfers their closingToken after approving Popswap (ERC721)", async function() {
+  it("Should change isTradeExecutable result if closingToken owner transfers their closingToken after approving Popswap (ERC721)", async function() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
     const ERC721 = await hre.ethers.getContractFactory("ERC721");
@@ -300,16 +300,16 @@ describe("Popswap", function() {
 
     await expect(approvalClosingTokenError).to.be.false;
 
-    let isTradeExecutablePreTransfer = await popswap.connect(addr1).isExchangeExecutable("0", "0", "0");
+    let isTradeExecutablePreTransfer = await popswap.connect(addr1).isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutablePreTransfer).to.be.true;
 
     await soda.connect(addr1).transferFrom(addr1.address, addr2.address, 777)
 
-    let isTradeExecutablePostTransfer = await popswap.connect(addr1).isExchangeExecutable("0", "0", "0");
+    let isTradeExecutablePostTransfer = await popswap.connect(addr1).isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutablePostTransfer).to.be.false;
 
   });
-  it("Should change isExchangeExecutable result if closingToken owner transfers their closingToken after approving Popswap (ERC1155)", async function() {
+  it("Should change isTradeExecutable result if closingToken owner transfers their closingToken after approving Popswap (ERC1155)", async function() {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
     const ERC1155 = await hre.ethers.getContractFactory("ERC1155");
@@ -360,12 +360,12 @@ describe("Popswap", function() {
 
     await expect(approvalClosingTokenError).to.be.false;
 
-    let isTradeExecutablePreTransfer = await popswap.connect(addr1).isExchangeExecutable("0", "1", "1");
+    let isTradeExecutablePreTransfer = await popswap.connect(addr1).isTradeExecutable("0", "1", "1");
     await expect(isTradeExecutablePreTransfer).to.be.true;
 
     await nftx.connect(addr1).safeTransferFrom(addr1.address, addr2.address, 13, 1, 0x0000000000000000000000000000000000000000000000000000000000000000)
 
-    let isTradeExecutablePostTransfer = await popswap.connect(addr1).isExchangeExecutable("0", "1", "1");
+    let isTradeExecutablePostTransfer = await popswap.connect(addr1).isTradeExecutable("0", "1", "1");
     await expect(isTradeExecutablePostTransfer).to.be.false;
 
   });
@@ -408,7 +408,7 @@ describe("Popswap", function() {
 
     await expect(tradeItem).to.have.lengthOf(10) // Length of Trade struct
 
-    let isTradeExecutable = await popswap.isExchangeExecutable("0", "0", "0");
+    let isTradeExecutable = await popswap.isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutable).to.be.false;
 
   });
@@ -457,7 +457,7 @@ describe("Popswap", function() {
 
     await expect(tradeItem).to.have.lengthOf(10) // Length of Trade struct
 
-    let isTradeExecutable = await popswap.isExchangeExecutable("0", "0", "0");
+    let isTradeExecutable = await popswap.isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutable).to.be.false;
 
   });
@@ -500,7 +500,7 @@ describe("Popswap", function() {
 
     await expect(tradeItem).to.have.lengthOf(10) // Length of Trade struct
 
-    let isTradeExecutable = await popswap.isExchangeExecutable("0", "1", "1");
+    let isTradeExecutable = await popswap.isTradeExecutable("0", "1", "1");
     await expect(isTradeExecutable).to.be.false;
     
   });
@@ -565,10 +565,10 @@ describe("Popswap", function() {
 
     await expect(approvalClosingTokenError).to.be.false;
 
-    let isTradeExecutablePreExecution = await popswap.connect(addr1).isExchangeExecutable("0", "0", "0");
+    let isTradeExecutablePreExecution = await popswap.connect(addr1).isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutablePreExecution).to.be.true;
 
-    let isTradeExecutablePreExecutionNoClosingOwnership = await popswap.isExchangeExecutable("0", "0", "0");
+    let isTradeExecutablePreExecutionNoClosingOwnership = await popswap.isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutablePreExecutionNoClosingOwnership).to.be.false;
 
     let tradeExecutionError = false;
@@ -582,7 +582,7 @@ describe("Popswap", function() {
 
     await expect(tradeExecutionError).to.be.false;
 
-    let isTradeExecutablePostExecution = await popswap.connect(addr1).isExchangeExecutable("0", "0", "0");
+    let isTradeExecutablePostExecution = await popswap.connect(addr1).isTradeExecutable("0", "0", "0");
     await expect(isTradeExecutablePostExecution).to.be.false;
 
     const balanceOfOrderOpenerOpeningTokenAfterTrade = await nifty.balanceOf(owner.address);
@@ -657,10 +657,10 @@ describe("Popswap", function() {
 
     await expect(approvalClosingTokenError).to.be.false;
 
-    let isTradeExecutablePreExecution = await popswap.connect(addr1).isExchangeExecutable("0", "1", "1");
+    let isTradeExecutablePreExecution = await popswap.connect(addr1).isTradeExecutable("0", "1", "1");
     await expect(isTradeExecutablePreExecution).to.be.true;
 
-    let isTradeExecutablePreExecutionNoClosingOwnership = await popswap.isExchangeExecutable("0", "1", "1");
+    let isTradeExecutablePreExecutionNoClosingOwnership = await popswap.isTradeExecutable("0", "1", "1");
     await expect(isTradeExecutablePreExecutionNoClosingOwnership).to.be.false;
 
     let tradeExecutionError = false;
@@ -674,7 +674,7 @@ describe("Popswap", function() {
 
     await expect(tradeExecutionError).to.be.false;
 
-    let isTradeExecutablePostExecution = await popswap.connect(addr1).isExchangeExecutable("0", "1", "1");
+    let isTradeExecutablePostExecution = await popswap.connect(addr1).isTradeExecutable("0", "1", "1");
     await expect(isTradeExecutablePostExecution).to.be.false;
 
     const balanceOfOrderOpenerOpeningTokenAfterTrade = await seen.balanceOf(owner.address, 10);
@@ -750,10 +750,10 @@ describe("Popswap", function() {
 
     await expect(approvalClosingTokenError).to.be.false;
 
-    let isTradeExecutablePreExecution = await popswap.connect(addr1).isExchangeExecutable("0", "0", "1");
+    let isTradeExecutablePreExecution = await popswap.connect(addr1).isTradeExecutable("0", "0", "1");
     await expect(isTradeExecutablePreExecution).to.be.true;
 
-    let isTradeExecutablePreExecutionNoClosingOwnership = await popswap.isExchangeExecutable("0", "0", "1");
+    let isTradeExecutablePreExecutionNoClosingOwnership = await popswap.isTradeExecutable("0", "0", "1");
     await expect(isTradeExecutablePreExecutionNoClosingOwnership).to.be.false;
 
     let tradeExecutionError = false;
@@ -767,7 +767,7 @@ describe("Popswap", function() {
 
     await expect(tradeExecutionError).to.be.false;
 
-    let isTradeExecutablePostExecution = await popswap.connect(addr1).isExchangeExecutable("0", "0", "1");
+    let isTradeExecutablePostExecution = await popswap.connect(addr1).isTradeExecutable("0", "0", "1");
     await expect(isTradeExecutablePostExecution).to.be.false;
 
     const balanceOfOrderOpenerOpeningTokenAfterTrade = await nifty.balanceOf(owner.address);
@@ -843,10 +843,10 @@ describe("Popswap", function() {
 
     await expect(approvalClosingTokenError).to.be.false;
 
-    let isTradeExecutablePreExecution = await popswap.connect(addr1).isExchangeExecutable("0", "1", "0");
+    let isTradeExecutablePreExecution = await popswap.connect(addr1).isTradeExecutable("0", "1", "0");
     await expect(isTradeExecutablePreExecution).to.be.true;
 
-    let isTradeExecutablePreExecutionNoClosingOwnership = await popswap.isExchangeExecutable("0", "1", "0");
+    let isTradeExecutablePreExecutionNoClosingOwnership = await popswap.isTradeExecutable("0", "1", "0");
     await expect(isTradeExecutablePreExecutionNoClosingOwnership).to.be.false;
 
     let tradeExecutionError = false;
@@ -860,7 +860,7 @@ describe("Popswap", function() {
 
     await expect(tradeExecutionError).to.be.false;
 
-    let isTradeExecutablePostExecution = await popswap.connect(addr1).isExchangeExecutable("0", "1", "0");
+    let isTradeExecutablePostExecution = await popswap.connect(addr1).isTradeExecutable("0", "1", "0");
     await expect(isTradeExecutablePostExecution).to.be.false;
 
     const balanceOfOrderOpenerOpeningTokenAfterTrade = await seen.balanceOf(owner.address, 10);
